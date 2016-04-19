@@ -367,7 +367,7 @@ def wait_for_elb(asg_connection, module, group_name):
         while healthy_instances < as_group.min_size and wait_timeout > time.time():
             healthy_instances = elb_healthy(asg_connection, elb_connection, module, group_name)
             log.debug("ELB thinks {0} instances are healthy.".format(healthy_instances))
-            time.sleep(60)
+            time.sleep(10)
         if wait_timeout <= time.time():
             # waiting took too long
             module.fail_json(msg = "Waited too long for ELB instances to be healthy. %s" % time.asctime())

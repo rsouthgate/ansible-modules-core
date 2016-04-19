@@ -202,7 +202,7 @@ to "replace_instances":
 
 import time
 import logging as log
-
+from sets import Set;
 from ansible.module_utils.basic import *
 from ansible.module_utils.ec2 import *
 log.getLogger('boto').setLevel(log.CRITICAL)
@@ -339,8 +339,12 @@ def elb_healthy(asg_connection, elb_connection, module, group_name):
             if i.state == "InService":
                 healthy_instances.append(i.instance_id)
             log.debug("{0}: {1}".format(i.instance_id, i.state))
-    return len(healthy_instances)
+    return len(unique(healthy_instances))
 
+def unique(seq):
+   # Not order preserving    
+   set = Set(seq)
+   return list(set)
 
 def wait_for_elb(asg_connection, module, group_name):
     region, ec2_url, aws_connect_params = get_aws_connection_info(module)
@@ -363,7 +367,7 @@ def wait_for_elb(asg_connection, module, group_name):
         while healthy_instances < as_group.min_size and wait_timeout > time.time():
             healthy_instances = elb_healthy(asg_connection, elb_connection, module, group_name)
             log.debug("ELB thinks {0} instances are healthy.".format(healthy_instances))
-            time.sleep(10)
+            time.sleep(60)
         if wait_timeout <= time.time():
             # waiting took too long
             module.fail_json(msg = "Waited too long for ELB instances to be healthy. %s" % time.asctime())
